@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Language Islands · 语言岛</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.29.5/dist/index.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <h1 id="header-title">语言岛</h1>
+    <div class="header-actions">
+      <button class="icon-btn" id="btn-global-play" title="Ouvir tudo" aria-label="Ouvir tudo">▶</button>
+      <button class="icon-btn" id="btn-stop" title="Parar" aria-label="Parar" style="display:none">⏹</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="main-tabs">
+    <button class="tab active" data-screen="home">Ilhas</button>
+    <button class="tab" data-screen="flashcards">Cards</button>
+    <button class="tab" data-screen="stats">Stats</button>
+    <button class="tab" data-screen="manage">Gerir</button>
+  </nav>
+
+  <!-- HOME: Islands list -->
+  <section class="screen active" id="screen-home">
+    <div class="section-head">
+      <h2>Suas Ilhas</h2>
+      <button class="btn btn-primary btn-sm" id="btn-new-island">+ Nova Ilha</button>
+    </div>
+    <div id="islands-list"></div>
+    <div class="empty hidden" id="empty-islands">
+      <h3>Nenhuma ilha ainda</h3>
+      <p>Crie sua primeira ilha temática de frases e palavras em mandarim para começar a praticar.</p>
+      <button class="btn btn-primary" id="btn-new-island-empty">Criar primeira ilha</button>
+    </div>
+  </section>
+
+  <!-- ISLAND DETAIL -->
+  <section class="screen" id="screen-island">
+    <div class="flex-between mb-12">
+      <button class="btn btn-outline btn-sm" id="btn-back-home">← Voltar</button>
+      <div class="flex gap-8">
+        <button class="btn btn-outline btn-sm" id="btn-toggle-reveal">Mostrar tudo</button>
+        <button class="btn btn-primary btn-sm" id="btn-play-all">▶ Todas</button>
+      </div>
+    </div>
+    <div class="card mb-12">
+      <div class="flex-between">
+        <div>
+          <h2 id="island-name" style="font-size:1.2rem;font-weight:700"></h2>
+          <p class="meta" id="island-meta"></p>
+        </div>
+        <button class="icon-btn" id="btn-edit-island" title="Editar">✎</button>
+      </div>
+    </div>
+
+    <div class="chips mb-12">
+      <button class="chip active" data-filter="phrases">Frases</button>
+      <button class="chip" data-filter="words">Palavras</button>
+    </div>
+
+    <div id="phrases-section">
+      <div class="flex-between mb-8">
+        <span class="text-sm text-muted" id="phrases-count">0 frases</span>
+        <button class="btn btn-outline btn-sm" id="btn-add-phrase">+ Frase</button>
+      </div>
+      <div class="item-list" id="phrases-list"></div>
+    </div>
+
+    <div id="words-section" class="hidden">
+      <div class="flex-between mb-8">
+        <span class="text-sm text-muted" id="words-count">0 palavras</span>
+        <button class="btn btn-outline btn-sm" id="btn-add-word">+ Palavra</button>
+      </div>
+      <div class="item-list" id="words-list"></div>
+    </div>
+
+    <div class="mt-16">
+      <button class="btn btn-outline btn-block" id="btn-batch-import">Importar JSON (lote)</button>
+    </div>
+  </section>
+
+  <!-- FLASHCARDS -->
+  <section class="screen" id="screen-flashcards">
+    <div class="card mb-12">
+      <label>Estudar de</label>
+      <select id="fc-source">
+        <option value="all">Todas as ilhas</option>
+      </select>
+    </div>
+    <div class="chips mb-12">
+      <button class="chip active" data-fc-type="words">Palavras</button>
+      <button class="chip" data-fc-type="phrases">Frases</button>
+    </div>
+    <div id="fc-setup">
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="fc-total">0</div>
+          <div class="stat-label">Disponíveis</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="fc-due">0</div>
+          <div class="stat-label">Para revisar</div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" id="btn-start-fc" disabled>Iniciar Flashcards</button>
+    </div>
+
+    <div id="fc-session" class="hidden">
+      <div class="flex-between mb-8">
+        <span class="text-sm text-muted"><span id="fc-current">1</span> / <span id="fc-session-total">0</span></span>
+        <button class="btn btn-outline btn-sm" id="btn-end-fc">Encerrar</button>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="fc-progress" style="width:0%"></div></div>
+      <div class="flashcard-wrap">
+        <div class="flashcard" id="flashcard">
+          <div class="flashcard-face flashcard-front">
+            <div class="flashcard-hanzi" id="fc-front"></div>
+            <p class="text-xs text-muted mt-8">Toque para virar</p>
+          </div>
+          <div class="flashcard-face flashcard-back">
+            <div class="flashcard-pinyin" id="fc-pinyin"></div>
+            <div class="flashcard-trans" id="fc-trans"></div>
+            <p class="text-xs text-muted mt-12">Áudio tocado automaticamente</p>
+          </div>
+        </div>
+      </div>
+      <div class="btn-group mt-16">
+        <button class="btn btn-danger" id="btn-fc-hard">Difícil</button>
+        <button class="btn btn-success" id="btn-fc-easy">Fácil</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="screen" id="screen-stats">
+    <div class="stat-grid" id="stats-overview"></div>
+    <div class="card mb-12">
+      <div class="card-title">Atividade (7 dias)</div>
+      <div class="chart-bar" id="activity-chart"></div>
+      <div class="chart-labels" id="activity-labels"></div>
+    </div>
+    <div class="card mb-12">
+      <div class="card-title">Domínio por Ilha</div>
+      <div id="island-mastery"></div>
+    </div>
+    <div class="card mb-12">
+      <div class="card-title">Top Ilhas por plays</div>
+      <div id="top-islands"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Flashcards & palavras</div>
+      <div id="fc-stats"></div>
+    </div>
+  </section>
+
+  <!-- MANAGE / EXPORT -->
+  <section class="screen" id="screen-manage">
+    <div class="card mb-12">
+      <div class="card-title">Voz TTS</div>
+      <p class="text-sm text-muted mb-8">Escolha a voz usada ao tocar frases e palavras.</p>
+      <select id="voice-select">
+        <option value="random">Aleatória (entre as melhores)</option>
+      </select>
+      <div class="mt-12">
+        <label>Volume</label>
+        <div class="volume-wrap">
+          <input type="range" id="volume-slider" min="0" max="100" value="90">
+          <span class="volume-val" id="volume-val">90%</span>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm mt-12" id="btn-test-voice">▶ Testar voz</button>
+    </div>
+    <div class="card mb-12">
+      <div class="card-title">Exportar dados</div>
+      <p class="text-sm text-muted mb-12">Baixe um JSON com todas as suas ilhas, frases, palavras e estatísticas.</p>
+      <button class="btn btn-primary btn-block" id="btn-export">Exportar JSON</button>
+    </div>
+    <div class="card mb-12">
+      <div class="card-title">Importar dados</div>
+      <p class="text-sm text-muted mb-8">Cole um JSON exportado anteriormente. Substitui ou mescla.</p>
+      <p class="text-xs text-muted mb-8">Exemplo de formato:</p>
+      <pre class="text-xs mb-8" style="background:var(--bg);padding:10px;border-radius:8px;overflow-x:auto;color:var(--muted)">{
+  "islands": [{
+    "name": "Café",
+    "description": "Pedidos no café",
+    "phrases": [
+      {"hanzi": "我要一杯咖啡", "translation": "Eu quero um café"}
+    ],
+    "words": [
+      {"hanzi": "咖啡", "translation": "café"}
+    ]
+  }]
+}</pre>
+      <textarea class="json-area mb-12" id="import-json" placeholder='Cole o JSON aqui...'></textarea>
+      <div class="btn-group">
+        <button class="btn btn-outline" id="btn-import-merge">Mesclar</button>
+        <button class="btn btn-danger" id="btn-import-replace">Substituir tudo</button>
+      </div>
+    </div>
+    <div class="card mb-12">
+      <div class="card-title">Dados locais</div>
+      <p class="text-sm text-muted mb-12">Armazenado em localStorage. Limpar apaga tudo permanentemente.</p>
+      <button class="btn btn-danger btn-block" id="btn-reset">Limpar todos os dados</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Sobre</div>
+      <p class="text-sm text-muted">Language Islands · PWA offline-first inspirado em HyperLingua.<br>Áudio via Web Speech API (zh-CN).<br>Pinyin via pinyin-pro.</p>
+    </div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(console.error);
+    }
+  </script>
+</body>
+</html>
