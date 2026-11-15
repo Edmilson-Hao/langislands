@@ -1,4 +1,4 @@
-const CACHE = 'langislands-v2';
+const CACHE = 'langislands-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -6,7 +6,9 @@ const ASSETS = [
   './js/app.js',
   './manifest.json',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './libs/sweetalert2.all.min.js',
+  './libs/pinyin-pro.min.js'
 ];
 
 self.addEventListener('install', e => {
@@ -23,18 +25,19 @@ self.addEventListener('activate', e => {
   );
 });
 
+// Cache-first: fully offline after first successful install
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
     caches.match(e.request).then(cached => {
-      const fetched = fetch(e.request).then(res => {
+      if (cached) return cached;
+      return fetch(e.request).then(res => {
         if (res && res.status === 200 && res.type === 'basic') {
           const clone = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
       }).catch(() => cached);
-      return cached || fetched;
     })
   );
 });
